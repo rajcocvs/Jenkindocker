@@ -1,0 +1,80 @@
+pipeline {
+    agent any
+
+    environment {
+     DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+        DOCKER_IMAGE = 'java-app-image'
+        DOCKER_TAG = 'latest'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                // Checkout code from Git repository
+                git 'https://github.com/rajcocvs/Jenkindocker.git'
+            }
+        }
+
+        stage('Build Java Application') {
+            steps {
+                script {
+                    // Build the Java app using Maven
+                    sh 'mvn clean package'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                }
+            }
+        }
+
+        stage('Test Docker Image') {
+            steps {
+                script {
+                    // Run the Docker container and test the application
+                    sh "docker run -d -p 9090:9090 ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    // Optional: Add additional tests or verification here
+                    sleep 10 // Wait for container to start
+                    //// Test endpoint (if applicable)
+                   // sh "curl http://localhost:9090"
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+              withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                 }
+                   
+                    // Push the Docker image to DockerHub (or other container registry)
+                    sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} rajcosivadevops/${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    sh "docker push rajcosivadevops/${DOCKER_IMAGE}:${DOCKER_TAG}"
+                }
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                script {
+                    // Run the container on the target environment (e.g., EC2, Kubernetes)
+                    sh "docker run -d -p 8081:8080 rajcosivadevops/${DOCKER_IMAGE}:${DOCKER_TAG}"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up Docker containers/images
+            sh 'docker system prune -f'
+        }
+    }
+}
