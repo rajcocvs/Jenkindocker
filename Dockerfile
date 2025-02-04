@@ -8,4 +8,4 @@ WORKDIR /app
 COPY target/app-v1.jar /app/app-v1.jar
 
 # Step 4: Command to run the Java app
-CMD ["java", "-jar", "app-v1.jar"]
+CMD ["java", "-jar", "app-v1.jar", "--server.port=8080"]
