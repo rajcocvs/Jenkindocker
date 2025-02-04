@@ -7,5 +7,7 @@ WORKDIR /app
 # Step 3: Copy the compiled JAR file from the host machine into the container
 COPY target/app-v1.jar /app/app-v1.jar
 
+EXPOSE 9090
+
 # Step 4: Command to run the Java app
 CMD ["java", "-jar", "app-v1.jar", "--server.port=9090"]
