@@ -5,7 +5,7 @@ FROM openjdk:11-jre-slim
 WORKDIR /app
 
 # Step 3: Copy the compiled JAR file from the host machine into the container
-COPY target/appv1.jar /app/app.jar
+COPY target/app-v1.jar /app/app-v1.jar
 
 # Step 4: Command to run the Java app
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "app-v1.jar"]
